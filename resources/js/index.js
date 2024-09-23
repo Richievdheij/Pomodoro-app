@@ -4,6 +4,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const pomodoroApp = document.getElementById('pomodoro-app');
 
+    // Constants
+    const ONE_MINUTE = 60; // One minute in seconds
+    const WORK_TIME = 25 * ONE_MINUTE; // 25 minutes for the Pomodoro timer
+    const SHORT_BREAK_TIME = 5 * ONE_MINUTE; // 5-minute short break
+    const LONG_BREAK_TIME = 30 * ONE_MINUTE; // 30-minute long break
+
+    // Variables
     let breakCounter = 0;
     let isPaused = false;
     let isBreak = false;
@@ -13,9 +20,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let breakSessions = 0;
     let isShortBreak = false;
     let breakTimeLeft;
-    let mainTimerInterval;
     let addedTime = 0; // Store additional minutes added to the timer
-    let timeLeft = 25 * 60;  // Initial time period set to 25 minutes
+    let timeLeft = WORK_TIME;  // Initial time set to 25 minutes
 
     // Create the timer and controls in the DOM
     function createPomodoroTimer() {
@@ -52,8 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Countdown function executed every second
     function countdown() {
-        const minutes = Math.floor(timeLeft / 60);
-        const seconds = timeLeft % 60;
+        const minutes = Math.floor(timeLeft / ONE_MINUTE);
+        const seconds = timeLeft % ONE_MINUTE;
 
         updateTimerDisplay(minutes, seconds); // Update time display
 
@@ -83,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function startTimer() {
         if (!isPaused && !isBreak) {
             // Reset the timer to 25 minutes + any additional time when starting
-            timeLeft = (25 * 60) + addedTime;  
+            timeLeft = WORK_TIME + addedTime;  
         }
         interval = setInterval(countdown, 1000); // Start countdown every second
         document.getElementById('start').textContent = 'Pause'; // Change button to 'Pause'
@@ -109,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reset the timer to its default state
     function resetTimer() {
         clearInterval(interval); // Stop the timer
-        timeLeft = 25 * 60; // Reset timer to 25 minutes
+        timeLeft = WORK_TIME; // Reset timer to 25 minutes
         addedTime = 0; // Clear added time
         updateTimerDisplay(25, 0); // Reset display to 25:00
         isPaused = false;
@@ -125,10 +131,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (breakCounter === 4) {
             // Long break after 4 sessions
             breakCounter = 0;
-            breakTimeLeft = 30 * 60; // 30-minute break
+            breakTimeLeft = LONG_BREAK_TIME; // 30-minute break
         } else {
             // Short break between sessions
-            breakTimeLeft = 5 * 60; // 5-minute break
+            breakTimeLeft = SHORT_BREAK_TIME; // 5-minute break
             isShortBreak = true;
         }
         hidePopup(); // Hide popup after some time
@@ -154,13 +160,13 @@ document.addEventListener('DOMContentLoaded', () => {
         popup.classList.remove('hidden');
         popupContent.innerHTML = `
             <h2>Time is up!</h2>
-            <p>Take a break and start again after: <span id="break-time">${Math.floor(breakTimeLeft / 60)} mins</span></p>
+            <p>Take a break and start again after: <span id="break-time">${Math.floor(breakTimeLeft / ONE_MINUTE)} mins</span></p>
         `;
 
         // Countdown for the break period
         const breakInterval = setInterval(() => {
-            const minutes = Math.floor(breakTimeLeft / 60);
-            const seconds = breakTimeLeft % 60;
+            const minutes = Math.floor(breakTimeLeft / ONE_MINUTE);
+            const seconds = breakTimeLeft % ONE_MINUTE;
             const startButton = document.getElementById('pause');
             startButton.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 
@@ -187,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reset the work session after the break
     function resetWorkSession() {
         // Reset timer to 25 minutes + any additional time
-        timeLeft = 25 * 60 + addedTime;  
+        timeLeft = WORK_TIME + addedTime;  
         addedTime = 0; // Reset additional time
         document.getElementById('pause').textContent = 'Start'; // Change button back to 'Start'
         document.getElementById('pause').setAttribute('id', 'start');
@@ -195,27 +201,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add event listeners for the buttons
     document.addEventListener('click', (e) => {
-        if (e.target.id === 'start') {
-            startTimer(); // Start the timer
-        } else if (e.target.id === 'pause' && !isBreakRunning) {
-            pauseTimer(); // Pause the timer
-        } else if (e.target.id === 'resume') {
-            resumeTimer(); // Resume the timer
-        } else if (e.target.id === 'restart' && !isBreakRunning) {
-            resetTimer(); // Restart the timer
-        } else if (e.target.id === 'add-1min') {
-            // Add 1 minute to the current time and update display
-            addedTime += 60;  
-            if (!isPaused && !isBreakRunning) {
-                timeLeft += 60;
-            }
-            updateTimerDisplay(Math.floor(timeLeft / 60), timeLeft % 60);
-        } else if (e.target.id === 'add-10min') {
-            addedTime += 600;  // Add 10 minutes to the added time
-            if (!isPaused && !isBreakRunning) {
-                timeLeft += 600;
-            }
-            updateTimerDisplay(Math.floor(timeLeft / 60), timeLeft % 60);
+        switch (e.target.id) {
+            case 'start':
+                startTimer(); // Start the timer
+                break;
+            case 'pause':
+                if (!isBreakRunning) pauseTimer(); // Pause the timer
+                break;
+            case 'resume':
+                resumeTimer(); // Resume the timer
+                break;
+            case 'restart':
+                if (!isBreakRunning) resetTimer(); // Restart the timer
+                break;
+            case 'add-1min':
+                timeLeft += ONE_MINUTE;  // add 1 minute
+                break;
+            case 'add-10min':
+                timeLeft += 10 * ONE_MINUTE;  // Add 10 minutes
+                break;
         }
     });
 });
